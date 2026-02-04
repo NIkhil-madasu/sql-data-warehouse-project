@@ -1,0 +1,31 @@
+-----------------------------------------RANKING(TOP-N/BOTTOM-N)-----------------------------------------------
+
+------ORDER THE VALUES OF DIM BY MEASURE FOR IDENTIFYING TOP-N & BOTTOM-N PERFORMERS--
+
+---SYNTAX = RANK[DIM] B MEASURE
+---EXAMPLE: RANK COUNTRY BY TOTAL SALES , TOP5 PRODUCTS BY QUANTITY ,E.T.C
+
+===================WHICH 2 PRODUCTS GENERATE HIGHEST REVENUE===================================
+
+================= HERE PRODUCTS FROM [PRODUCT TABLE] REVENUE FROM [ORDERS TABLE]========================
+
+ SELECT* FROM(
+ SELECT 
+Product,
+SUM(S.Sales) AS TOTAL_REVENUE,
+ROW_NUMBER() OVER(ORDER BY SUM(S.Sales) DESC) AS RANK
+FROM Sales.Orders AS S
+LEFT JOIN Sales.Products AS P
+ON S.ProductID=P.ProductID
+GROUP BY PRODUCT  )t WHERE RANK<=2
+
+ -----------------SAME ABOVE TASK WITHOUT WINDOW FUNCTION USING (GROUP BY)--------------
+
+ SELECT TOP 2
+Product,
+SUM(S.Sales) AS TOTAL_REVENUE
+FROM Sales.Orders AS S
+LEFT JOIN Sales.Products AS P
+ON S.ProductID=P.ProductID
+GROUP BY PRODUCT
+ORDER BY TOTAL_REVENUE DESC

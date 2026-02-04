@@ -1,0 +1,20 @@
+---------------------------------------------CUMMULATIVE ANALYSIS-----------------------------------------------------
+ 
+ ----------AGG THE DATA PROGRESSIVELY OVERTIME IT HELPS US TO UNDERSTABD OUR BUSINESS GROWTH OR DECLINE--------------------
+
+ ------SYNTAX = CUM MESURE BY DATE DIMESION--
+ ------EXAMPLE: RUNNING TOTAL BY YEAR, MOVING AVG BY MONTH 
+
+ ================================CALCULATE TOTAL SALES PER MONTH AND RUNNING TOTAL OF SALES OVER TIME===============================
+  SELECT
+  ORDER_DATE,
+  TOTAL_SALES,
+  sum(TOTAL_SALES) OVER(ORDER BY ORDER_DATE) AS RUNNING_TOTAL
+  FROM(
+ SELECT
+ DATETRUNC( MONTH,OrderDate) AS ORDER_DATE,
+ SUM(Sales) AS TOTAL_SALES
+ FROM  Sales.Orders
+ WHERE OrderDate IS NOT NULL
+ GROUP BY DATETRUNC( MONTH,OrderDate)
+ )t

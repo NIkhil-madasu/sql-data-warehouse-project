@@ -1,0 +1,32 @@
+--------------------------------------------CHANGE OVER TIME(TRENDS)-------------------------------------------------
+
+--------ANALYZE HOW MEASURE EVOLVES OVER TIME ,HELPS TRACK TRENDS AND IDENTIFY SEASONALITY IN YOUR DATA -------------------------------
+
+-----SYNTAX = AGG[MEASURE] BY [ DATE DIMENSION]
+-----EXMPLE: TOTAL SALES BY YEAR , AVG COST BY MONTH
+
+=================================ANALYZE SALES PERFORMANCE OVER TIME================================================================
+
+-------------SALES PERFORMANCE OVER MONTH----------------
+SELECT
+DATETRUNC(MONTH,OrderDate) AS ORDER_MONTHS,
+SUM(Sales) AS TOTAL_SALES
+FROM Sales.Orders
+GROUP BY DATETRUNC(MONTH,OrderDate)
+ORDER BY TOTAL_SALES DESC
+
+------------SALES PERFORMANCE OVER YEAR (WITHOUT DATE TRUNC)-------------------
+SELECT
+YEAR(OrderDate) AS ORDER_YEARS,
+SUM(Sales) AS TOTAL_SALES
+FROM Sales.Orders
+GROUP BY YEAR(OrderDate)
+ORDER BY TOTAL_SALES DESC
+
+-------------SALES PERFORMANCE OVER MONTHS USING FORMAT--------------------
+SELECT
+FORMAT(ORDERDATE,'yyyy-MMMM') AS ORDER_MONTHS,
+SUM(Sales) AS TOTAL_SALES
+FROM Sales.Orders
+GROUP BY FORMAT(ORDERDATE,'yyyy-MMMM')
+ORDER BY TOTAL_SALES DESC

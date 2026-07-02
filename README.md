@@ -16,7 +16,7 @@ Develop a modern data warehouse using SQL Server to consolidate sales data, enab
 
 ### Specifications
 
-- **Data Sources:** create 2 datasources A & B having 3 tables in each datasource, for (DATASOURCE-A(CUSTOMERS,SALES,PRODUCTS), DATA-B(CUSTOMER_LOCATION, CUSTOMER_DEMOGRAPHICS, DIM_PRODUCTS)).
+- **Data Sources:** create 2 datasources A & B having 3 tables in each datasource, for (DATASOURCE-A(CUSTOMERS,SALES,PRODUCTS), DATASOURCE-B(CUSTOMER_LOCATION, CUSTOMER_DEMOGRAPHICS, DIM_PRODUCTS)).
 - **Data Quality:** Cleanse and resolve data quality issues prior to analysis.
 - **Integration:** Combine both sources into a single, user-friendly data model designed for analytical queries.
 - **Scope:** Focus on the latest dataset only; historization of data is not required.

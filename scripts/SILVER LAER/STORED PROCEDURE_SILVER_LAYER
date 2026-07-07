@@ -1,0 +1,179 @@
+EXEC silver.load_silver;
+
+CREATE OR ALTER PROCEDURE silver.load_silver
+AS
+BEGIN
+    DECLARE @start_time DATETIME, @end_time DATETIME;
+    DECLARE @batch_start_time DATETIME, @batch_end_time DATETIME;
+
+    BEGIN TRY
+        SET @batch_start_time = GETDATE();
+        PRINT '================================================';
+        PRINT 'Loading Silver Layer';
+        PRINT '================================================';
+
+        ----------------------------------------------
+        -- silver.cust_info
+        ----------------------------------------------
+        SET @start_time = GETDATE();
+        PRINT '>> TRUNCATE TABLE silver.cust_info';
+        TRUNCATE TABLE silver.cust_info;
+
+        PRINT '>> INSERTING DATA INTO : silver.cust_info';
+        INSERT INTO silver.cust_info(cst_id,cst_Key,cst_Firstname,cst_Lastname,cst_marital_status,cst_Gender,cst_Create_date)
+        SELECT
+            cst_id,
+            cst_Key,
+            REPLACE(TRIM(cst_Firstname),' ', '') AS cst_Firstname,
+            REPLACE(TRIM(cst_Lastname), ' ','') AS cst_Lastname,
+            CASE WHEN UPPER(TRIM(cst_marital_status))='S' THEN 'Single'
+                 WHEN UPPER(TRIM(cst_marital_status))='M' THEN 'Married'
+                 ELSE 'n\a'
+            END cst_marital_status,
+            CASE WHEN UPPER(TRIM(cst_Gender))='F' THEN 'Female'
+                 WHEN UPPER(TRIM(cst_Gender))='M' THEN 'Male'
+                 ELSE 'n\a'
+            END cst_Gender,
+            cst_Create_date
+        FROM bronze.cust_info;
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '------------------------------------------------';
+
+        ----------------------------------------------
+        -- silver.prd_info
+        ----------------------------------------------
+        SET @start_time = GETDATE();
+        PRINT '>> TRUNCATE TABLE silver.prd_info';
+        TRUNCATE TABLE silver.prd_info;
+
+        PRINT '>> INSERTING DATA INTO : silver.prd_info';
+        INSERT INTO silver.prd_info(prd_id,cat_id,prd_key,prd_num,prd_cost,prd_line,prd_start_date,prd_end_date)
+        SELECT
+            prd_id,
+            REPLACE(SUBSTRING(prd_key,1,5), '-','_') AS cat_id,
+            SUBSTRING(prd_key,7,LEN(prd_key)) AS prd_key,
+            prd_num,
+            ISNULL(prd_cost,0) AS prd_cost,
+            CASE UPPER(TRIM(prd_line))
+                 WHEN 'M' THEN 'Mountain'
+                 WHEN 'R' THEN 'Road'
+                 WHEN 'S' THEN 'Other Sales'
+                 WHEN 'T' THEN 'Touring'
+                 ELSE 'n\a'
+            END prd_line,
+            CAST(prd_start_date AS date) AS prd_start_date,
+            CAST(LEAD(prd_start_date) OVER (PARTITION BY prd_key ORDER BY prd_start_date)-1 AS DATE) AS prd_end_date
+        FROM bronze.prd_info;
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '------------------------------------------------';
+
+        ----------------------------------------------
+        -- silver.sls_details
+        ----------------------------------------------
+        SET @start_time = GETDATE();
+        PRINT '>> TRUNCATE TABLE silver.sls_details';
+        TRUNCATE TABLE silver.sls_details;
+
+        PRINT '>> INSERTING DATA INTO : silver.sls_details';
+        INSERT INTO silver.sls_details(sls_ord_num,sls_prd_key,sls_cst_id,sls_ord_date,
+            sls_ship_date,sls_due_date,sls_sales,sls_quantity,sls_price)
+        SELECT
+            TRIM(sls_ord_num) AS sls_ord_num,
+            TRIM(sls_prd_key) AS sls_prd_key,
+            sls_cst_id,
+            CAST(CAST(sls_ord_date AS varchar) AS date) AS sls_ord_date,
+            CAST(CAST(sls_ship_date AS varchar) AS date) AS sls_ship_date,
+            CAST(CAST(sls_due_date AS varchar) AS date) AS sls_due_date,
+            sls_sales,
+            sls_quantity,
+            sls_price
+        FROM bronze.sls_details;
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '------------------------------------------------';
+
+        ----------------------------------------------
+        -- silver.demographics
+        ----------------------------------------------
+        SET @start_time = GETDATE();
+        PRINT '>> TRUNCATE TABLE silver.demographics';
+        TRUNCATE TABLE silver.demographics;
+
+        PRINT '>> INSERTING DATA INTO : silver.demographics';
+        INSERT INTO silver.demographics(cst_id,bdate,gender)
+        SELECT
+            CASE WHEN cst_id LIKE 'NAS%' THEN SUBSTRING(cst_id,4,LEN(cst_id))
+                 ELSE cst_id
+            END cst_id,
+            CASE WHEN bdate > GETDATE() THEN NULL
+                 ELSE bdate
+            END bdate,
+            CASE WHEN UPPER(TRIM(gender)) ='F' THEN 'Female'
+                 WHEN UPPER(TRIM(gender)) ='M' THEN 'Male'
+                 ELSE 'N\A'
+            END gender
+        FROM bronze.demographics;
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '------------------------------------------------';
+
+        ----------------------------------------------
+        -- silver.loc_details
+        ----------------------------------------------
+        SET @start_time = GETDATE();
+        PRINT '>> TRUNCATE TABLE silver.loc_details';
+        TRUNCATE TABLE silver.loc_details;
+
+        PRINT '>> INSERTING DATA INTO : silver.loc_details';
+        INSERT INTO silver.loc_details(cst_id,country)
+        SELECT
+            REPLACE(cst_id, '-','') AS cst_id,
+            CASE WHEN country IN ('DE') THEN 'Germany'
+                 WHEN country IN ('US', 'USA') THEN 'United States'
+                 WHEN country IS NULL THEN 'N\A'
+                 ELSE country
+            END country
+        FROM bronze.loc_details;
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '------------------------------------------------';
+
+        ----------------------------------------------
+        -- silver.cat_maintenance
+        ----------------------------------------------
+        SET @start_time = GETDATE();
+        PRINT '>> TRUNCATE TABLE silver.cat_maintenance';
+        TRUNCATE TABLE silver.cat_maintenance;
+
+        PRINT '>> INSERTING DATA INTO : silver.cat_maintenance';
+        INSERT INTO silver.cat_maintenance(id,cat,subcat,maintenance)
+        SELECT
+            id,
+            cat,
+            subcat,
+            maintenance
+        FROM bronze.cat_maintenance;
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '------------------------------------------------';
+
+        SET @batch_end_time = GETDATE();
+        PRINT '================================================';
+        PRINT 'Silver Layer Load Completed Successfully';
+        PRINT '   - Total Load Duration: ' + CAST(DATEDIFF(SECOND, @batch_start_time, @batch_end_time) AS NVARCHAR) + ' seconds';
+        PRINT '================================================';
+
+    END TRY
+    BEGIN CATCH
+        PRINT '================================================';
+        PRINT 'ERROR OCCURRED DURING LOADING SILVER LAYER';
+        PRINT 'Error Message: ' + ERROR_MESSAGE();
+        PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS NVARCHAR);
+        PRINT 'Error State: ' + CAST(ERROR_STATE() AS NVARCHAR);
+        PRINT 'Error Line: ' + CAST(ERROR_LINE() AS NVARCHAR);
+        PRINT '================================================';
+    END CATCH
+END
+GO

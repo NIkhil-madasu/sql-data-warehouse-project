@@ -7,26 +7,24 @@
 
 =================================ANALYZE SALES PERFORMANCE OVER TIME================================================================
 
--------------SALES PERFORMANCE OVER MONTH----------------
-SELECT
-DATETRUNC(MONTH,OrderDate) AS ORDER_MONTHS,
-SUM(Sales) AS TOTAL_SALES
-FROM Sales.Orders
-GROUP BY DATETRUNC(MONTH,OrderDate)
-ORDER BY TOTAL_SALES DESC
+------ANALYZE SALES PERFORMNCE OVER TIME --------------
+ ------WE ARE CALCULATING SALES BY YEAR AND MONTH-----------------
+ SELECT
+ YEAR(Order_Date) AS ORDER_YEAR,
+ MONTH(Order_Date) AS ORDER_MONTH,
+ SUM(Sales_amount) AS TOTAL_SALES
+ FROM gold.fact_sales
+ where Order_Date is not null
+ GROUP BY YEAR(Order_Date),MONTH(Order_Date)
+ ORDER BY YEAR(Order_Date),MONTH(Order_Date) DESC
 
-------------SALES PERFORMANCE OVER YEAR (WITHOUT DATE TRUNC)-------------------
-SELECT
-YEAR(OrderDate) AS ORDER_YEARS,
-SUM(Sales) AS TOTAL_SALES
-FROM Sales.Orders
-GROUP BY YEAR(OrderDate)
-ORDER BY TOTAL_SALES DESC
-
--------------SALES PERFORMANCE OVER MONTHS USING FORMAT--------------------
-SELECT
-FORMAT(ORDERDATE,'yyyy-MMMM') AS ORDER_MONTHS,
-SUM(Sales) AS TOTAL_SALES
-FROM Sales.Orders
-GROUP BY FORMAT(ORDERDATE,'yyyy-MMMM')
-ORDER BY TOTAL_SALES DESC
+ ---------ANALYZE AVG PRICE OVER TIME---------------------
+  ------WE ARE CALCULATING PRICES BY YEAR AND MONTH--------
+  SELECT
+ YEAR(Order_Date) AS ORDER_YEAR,
+ MONTH(Order_Date) AS ORDER_MONTH,
+ AVG(Price) AS AVG_PRICE
+ FROM gold.fact_sales
+ where Order_Date is not null
+ GROUP BY YEAR(Order_Date),MONTH(Order_Date)
+ ORDER BY YEAR(Order_Date),MONTH(Order_Date) DESC
